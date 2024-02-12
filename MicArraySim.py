@@ -4,35 +4,6 @@ from scipy.signal import fftconvolve
 import matplotlib.pyplot as plt
 import pyroomacoustics as pra
 
-# =============================================================================
-# TO-DO:
-# fix ill-conditioned matrix error
-# =============================================================================
-
-# Sound source locations
-azimuth = np.array([45, 135]) / 180 * np.pi # Angular displacement on a spherical coordinate system from a cardinal direction (+-180)
-distance = 5 # meters
-
-# Constants
-c = 343 # (m/s) speed of sound
-fs = 16000 # sampling frequency based on arduino
-nfft = 256 # FFT size
-freq_range = [300, 3500]
-room_x = 10
-room_y = 10
-room_z = 5
-mics = 5
-mic_diameter = 0.2
-
-# Set up the 3d room dimensions
-room_dim = [room_x, room_y, room_z]
-
-# Create an anechoic shoebox room
-snr_db = 5 # signal to noise ratio
-sigma2 = 10 ** (-snr_db / 10) / (4 * np.pi * distance) ** 2
-
-room = pra.ShoeBox(room_dim, fs=fs, max_order=0, sigma2_awgn=sigma2)
-
 def Circle(x, y, r, n):
     points = []
     theta = (np.pi * 2) / n
@@ -43,6 +14,35 @@ def Circle(x, y, r, n):
         pointY = (r * np.sin(curr_angle)) + y
         points.append((pointX, pointY))
     return points
+
+# =============================================================================
+# TO-DO:
+# fix ill-conditioned matrix error
+# =============================================================================
+
+# Sound source location
+azimuth = np.array([45, 135]) / 180 * np.pi # Angular displacement on a spherical (radians) coordinate system from a cardinal direction (+-180)
+distance = 4 # meters
+
+# Constants
+c = 343 # (m/s) speed of sound
+fs = 16000 # sampling frequency based on arduino
+nfft = 256 # FFT size
+freq_range = [300, 3500]
+room_x = 15
+room_y = 10
+room_z = 5
+mics = 5
+mic_diameter = 0.06
+
+# Set up the 3d room dimensions
+room_dim = [room_x, room_y, room_z]
+
+# Create an anechoic shoebox room
+snr_db = 5 # signal to noise ratio
+sigma2 = 10 ** (-snr_db / 10) / (4 * np.pi * distance) ** 2
+
+room = pra.ShoeBox(room_dim, fs=fs, max_order=0, sigma2_awgn=sigma2)
 
 circle_points = Circle(room_y/2, room_z/2, mic_diameter, mics)
 y_coordinates, z_coordinates = zip(*circle_points)
@@ -67,10 +67,9 @@ duration_samples = int(fs)
 
 sound_loc = []
 for ang in azimuth:
-    y_loc = ang + (room_y/2 - (azimuth[1] - azimuth[0])) # adjusting sound loc to center
-    x_loc = (azimuth[1]- azimuth[0]) / len(azimuth)
-    sound_loc.append((x_loc, y_loc)) # for printing
-    source_location = np.array([x_loc, y_loc, room_z/2])
+    y_loc = room_y/2 + (distance * np.tan(ang)) # adjusting sound loc to center
+    sound_loc.append(y_loc) # for printing
+    source_location = np.array([distance, y_loc, room_z*0.5])
     source_signal = rng.randn(duration_samples)
     room.add_source(source_location, signal=source_signal)
     
@@ -117,12 +116,14 @@ for algo_name in algo_names:
     
     c_phi_plt = np.r_[phi_plt, phi_plt[0]]
     c_dirty_img = np.r_[spatial_resp[algo_name], spatial_resp[algo_name][0]]
+    
     ax.plot(c_phi_plt, base + height * c_dirty_img,
             linewidth=3,
             alpha=0.55,
             linestyle='-',
             label="spatial spectrum"
             )
+    
     plt.title(algo_name)
     
     # plot true loc
