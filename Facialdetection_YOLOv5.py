@@ -2,23 +2,35 @@ import cv2
 import torch
 import serial
 import time
+import numpy as np
+
+# Provided camera matrix and distortion coefficients
+cameraMatrix = np.array([[       1124     ,      0    ,  929.81],
+[          0   ,   1122.3    ,  539.46],
+[          0      ,     0      ,     1]])
+distCoeffs = np.array([[   -0.41517   ,  0.22091, -0.00098211 ,-4.9035e-05   ,-0.063787]])
 
 # Load YOLOv5 model (change the path to your trained model)
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 
-# Initialize serial communication with Arduino
-  # Change to your Arduino's COM port
-ser = serial.Serial(port='COM3',baudrate= 9600)
+# Initialize serial communication with Arduino (change to your Arduino's COM port)
+ser = serial.Serial(port='COM3', baudrate=9600)
+ser.timeout = 0.1
 
 def write_read(x):
     ser.write(int(x))
     time.sleep(0.5)
     data = ser.readline()
-    return   data
+    return data
+
+def undistort_frame(frame):
+    return cv2.undistort(frame, cameraMatrix, distCoeffs)
 
 def main():
     # Initialize webcam (usually index 0 for the default camera)
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
     if not cap.isOpened():
         print("Error: Webcam not found or cannot be opened.")
@@ -32,8 +44,11 @@ def main():
             print("Error: Cannot read frame from webcam.")
             break
 
+        # Undistort the frame
+        undistorted_frame = undistort_frame(frame)
+
         # Perform inference using YOLOv5
-        results = model(frame)
+        results = model(undistorted_frame)
 
         # Get coordinates of detected people
         for det in results.pred[0]:
@@ -41,14 +56,13 @@ def main():
                 x, y, w, h = det[:4]
                 center_x = int(x + w / 2)
                 center_y = int(y + h / 2)
-                
-                print(f"Person at (x, y): ({center_x}, {center_y})")
-               
+
                 # Send central_x and central_y to Arduino
                 ser.write(f"{center_x},{center_y}\n".encode())
+                print(ser.readline())
 
-        # Display the frame
-        cv2.imshow("Webcam Feed", frame)
+        # Display the undistorted frame
+        cv2.imshow("Undistorted Webcam Feed", undistorted_frame)
 
         # Press 'q' to exit the loop
         if cv2.waitKey(1) & 0xFF == ord('q'):
