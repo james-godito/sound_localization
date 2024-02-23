@@ -34,20 +34,18 @@ void loop() {
 
 
         
-        int targetAngle = map(centerX, x_min, x_max, 0, 180);
+        if (centerX < x_min || centerX > x_max) {
+            int servAng = myServo.read(); // Declare servAng
 
-        // Smoothly adjust servo position
-        int currentAngle = myServo.read();
-        while (currentAngle != targetAngle) {
-            if (currentAngle < targetAngle) {
-                currentAngle += 1;
-            } else {
-                currentAngle -= 1;
+            if (centerX < x_min) {
+                servAng +=1;
+            } 
+            else {
+                servAng -=1;
             }
-            myServo.write(currentAngle);
-            delay(10); // Add a small delay for smooth motion
+            myServo.write(servAng);
+            delay(10);
         }
-
 
     }
 }
