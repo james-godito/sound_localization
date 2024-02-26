@@ -4,6 +4,9 @@ import serial
 import time
 import numpy as np
 
+x_min = 800
+x_max = 1120
+
 # Provided camera matrix and distortion coefficients
 cameraMatrix = np.array([[       1124     ,      0    ,  929.81],
 [          0   ,   1122.3    ,  539.46],
@@ -27,9 +30,10 @@ def undistort_frame(frame):
 
 def main():
     # Initialize webcam (usually index 0 for the default camera)
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    cap = cv2.VideoCapture(2, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    cap.set(cv2.CAP_PROP_FPS, 30)
 
     if not cap.isOpened():
         print("Error: Webcam not found or cannot be opened.")
@@ -55,14 +59,20 @@ def main():
                 x, y, w, h = det[:4]
                 center_x = int(x + w / 2)
                 center_y = int(y + h / 2)
-            
+                
+                if center_x < x_min:
+                    ser.write(f"{center_x},{center_y}\n".encode())
+                    print("yeah buddy")
+                elif center_x > x_max:
+                    ser.write(f"{center_x},{center_y}\n".encode())
+                    print("light weight")
+                else:
+                    print(":(")
 
-                # Send central_x and central_y to Arduino
-                ser.write(f"{center_x},{center_y}\n".encode())
-                print(ser.readline())
 
         # Display the undistorted frame
         cv2.imshow("Undistorted Webcam Feed", undistorted_frame)
+        
 
         # Press 'q' to exit the loop
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -74,4 +84,4 @@ def main():
     ser.close()  # Close serial connection
 
 if __name__ == "__main__":
-    main()
+       main()
