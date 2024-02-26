@@ -1,23 +1,20 @@
 #include <Servo.h>
 
-int i = 0;
 int centerX = 0; // Initialize centerX to 0
-int centerY = 0; // Initialize centerY to 0
 String centerPxStr; // Store the received string
 
 // Center box of image feed - if inside this box, no move
-int x_min = 900;
-int x_max = 1020;
+int x_min = 800;
+int x_max = 1120;
+int deg=90;
 
 Servo myServo;
 
 void setup() {
     myServo.attach(3);
     Serial.begin(9600); // Initialize serial communication
-    myServo.write(90);
+    myServo.writeMicroseconds(1500); // Set the initial position to stop the servo
 }
-
-// ... (previous code remains unchanged)
 
 void loop() {
     // Check if data is available on the serial port
@@ -25,27 +22,29 @@ void loop() {
         // Read the incoming value from Python as a string
         centerPxStr = Serial.readStringUntil(')'); // Read until closing parenthesis
 
-        // Parse the string to extract centerX and centerY
+        // Parse the string to extract centerX
         int commaPos = centerPxStr.indexOf(',');
         if (commaPos != -1) {
             centerX = centerPxStr.substring(0, commaPos).toInt(); // Extract centerX
-            //centerY = centerPxStr.substring(commaPos + 1).toInt(); // Extract centerY
         }
-
-
         
-        if (centerX < x_min || centerX > x_max) {
-            int servAng = myServo.read(); // Declare servAng
-
+        if(centerX<x_min || centerX>x_max){
             if (centerX < x_min) {
-                servAng +=1;
+                deg+=5;
+                myServo.write(deg); // Set the servo to rotate in one direction
             } 
-            else {
-                servAng -=1;
+            else if (centerX > x_max) {
+                deg-=5;
+                myServo.write(deg); // Set the servo to rotate in the other direction
             }
-            myServo.write(servAng);
+            else{
+              deg=deg;
+            }
+
             delay(10);
         }
-
+        else{
+          myServo.write(deg);
+        }
     }
 }
