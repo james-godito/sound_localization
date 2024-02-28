@@ -33,7 +33,7 @@ room_x = 15
 room_y = 10
 room_z = 5
 mics = 5
-mic_diameter = 0.06
+mic_diameter = 0.2744 # [m]
 
 # Set up the 3d room dimensions
 room_dim = [room_x, room_y, room_z]
