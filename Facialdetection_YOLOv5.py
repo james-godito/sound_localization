@@ -1,80 +1,65 @@
 import cv2
-import torch
 import serial
-import time
 import numpy as np
+import torch
 
-x_min = 800
-x_max = 1120
+def set_res(cap, x, y):
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(x))
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(y))
 
-# Provided camera matrix and distortion coefficients
-cameraMatrix = np.array([[1124, 0, 929.81],
-                         [0, 1122.3, 539.46],
-                         [0, 0, 1]])
-distCoeffs = np.array([[-0.41517, 0.22091, -0.00098211, -4.9035e-05, -0.063787]])
+ser = serial.Serial('COM3', 250000)  # Change if serial not COM3
+
+cap = cv2.VideoCapture(2)
+
+frame_w = 640
+frame_h = 480
+set_res(cap, frame_w, frame_h)
 
 # Load YOLOv5 model (change the path to your trained model)
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
-# Initialize serial communication with Arduino (change to your Arduino's COM port)
-ser = serial.Serial(port='COM3', baudrate=9600)
+while True:
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+    frame = cv2.flip(frame, 1)
 
-last_send_time = time.time()
+    # Our operations on the frame come here
+    # Perform inference using YOLOv5
+    results = model(frame)
 
-def undistort_frame(frame):
-    undistorted_frame = cv2.undistort(frame, cameraMatrix, distCoeffs)
-    return undistorted_frame
+    # Get coordinates of detected people
+    detections = results.xyxy[0].cpu().numpy()
 
-def main():
-    # Initialize webcam (usually index 0 for the default camera)
-    cap = cv2.VideoCapture(2, cv2.CAP_DSHOW)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    cap.set(cv2.CAP_PROP_FPS, 30)
+    # Filter detections to include only people (class 0)
+    people_detections = detections[detections[:, -1] == 0]
 
-    if not cap.isOpened():
-        print("Error: Webcam not found or cannot be opened.")
-        return
+    # Draw bounding boxes for people
+    for det in people_detections:
+        x, y, w, h, conf, cls = det
+        x, y, w, h = int(x), int(y), int(w), int(h)
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
-    global last_send_time
+    # Display the resulting frame
+    cv2.imshow('frame', frame)
 
-    while True:
-        # Read a frame from the webcam
-        ret, frame = cap.read()
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-        if not ret:
-            print("Error: Cannot read frame from webcam.")
-            break
+    if people_detections.shape[0] > 0:
+        # Assuming the first detected person is the closest one
+        face_center_x = people_detections[0, 0] + people_detections[0, 2] / 2
+        face_center_y = people_detections[0, 1] + people_detections[0, 3] / 2
 
-        # Undistort the frame
-        undistorted_frame = undistort_frame(frame)
+        err_x = 30 * (face_center_x - frame_w / 2) / (frame_w / 2)
+        err_y = 30 * (face_center_y - frame_h / 2) / (frame_h / 2)
 
-        # Perform inference using YOLOv5
-        results = model(undistorted_frame)
+        ser.write((f"{err_x}x!").encode())
+        ser.write((f"{err_y}y!").encode())
+        print("X:", err_x, "Y:", err_y)
+    else:
+        ser.write("o!".encode())
 
-        # Get coordinates of detected people
-        for det in results.pred[0]:
-            if det[-1] == 0:  # Class index for "person"
-                x, y, w, h = det[:4]
-                center_x = int(x + w / 2)
-                center_y = int(y + h / 2)
-
-                current_time = time.time()
-                if center_x < x_min or center_x > x_max and current_time - last_send_time >= 1:
-                    ser.write(f"{center_x},{center_y}\n".encode())
-                    last_send_time = current_time
-
-        # Display the undistorted frame
-        cv2.imshow("Undistorted Webcam Feed", undistorted_frame)
-
-        # Press 'q' to exit the loop
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # Release the webcam and close the window
-    cap.release()
-    cv2.destroyAllWindows()
-    ser.close()  # Close serial connection
-
-if __name__ == "__main__":
-    main()
+# When everything done, release the capture
+ser.close()
+cap.release()
+cv2.destroyAllWindows()
