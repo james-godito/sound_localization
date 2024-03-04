@@ -1,41 +1,76 @@
-#include <Servo.h>
+#include <VarSpeedServo.h>
+VarSpeedServo servo1; VarSpeedServo servo2;
+String inputString = "";         // a string to hold incoming data
+unsigned int cont=0;
 
-int centerX = 0; // Initialize centerX to 0
-String centerPxStr; // Store the received string
+void setup() 
+{
+  servo1.attach(9);
+  servo2.attach(10);
 
-// Center box of image feed - if inside this box, no move
-int x_min = 800;
-int x_max = 1120;
-int deg=90;
-
-Servo myServo;
-
-void setup() {
-    myServo.attach(3);
-    Serial.begin(9600); // Initialize serial communication
-    myServo.write(90); // Set the initial position to stop the servo
+  Serial.begin(250000);
+  Serial.println("Ready");
 }
 
-void loop() {
-    // Check if data is available on the serial port
-    if (Serial.available() > 0) {
-        // Read the incoming value from Python as a string
-        centerPxStr = Serial.readStringUntil(')'); // Read until closing parenthesis
 
-        // Parse the string to extract centerX
-        int commaPos = centerPxStr.indexOf(',');
-        if (commaPos != -1) {
-            centerX = centerPxStr.substring(0, commaPos).toInt(); // Extract centerX
-        }
-    }
+void loop() 
+{
 
-    if(centerX<x_min && centerX != 0 && deg < 180){
-        deg+=1;
-        myServo.write(deg);
+  signed int vel;
+  unsigned int pos;
+  
+  if (Serial.available()) 
+  {
+    inputString = Serial.readStringUntil('!');
+    vel = inputString.toInt();   
+
+    if(inputString.endsWith("x"))
+    {
+      if (vel > 2)
+        servo1.write(180, vel, false);    
+      else if (vel < -2)
+        servo1.write(0, -vel, false);    
+      else
+      {
+        pos = servo1.read();
+        servo1.write(pos, 255, false);       
+      } 
     }
-    else if(centerX>x_max && deg > 0){
-        deg-=1;
-        myServo.write(deg);
+    else if(inputString.endsWith("y"))
+    {
+      if (vel > 2)
+        servo2.write(180, vel, false);    
+      else if (vel < -2)
+        servo2.write(0, -vel, false);    
+      else
+      {
+        pos = servo2.read();
+        servo2.write(pos, 255, false);       
+      } 
     }
-    delay(5);
+    else if(inputString.endsWith("o"))
+    {
+      cont++;
+      if (cont >= 100)
+      {
+        pos = servo1.read();
+        servo1.write(90, 20, true);        
+        pos = servo2.read();
+        servo2.write(70 , 20, true);
+        cont = 0;
+ 
+      }
+      else
+      {
+        pos = servo1.read();
+        servo1.write(pos, 255, false);        
+        pos = servo2.read();
+        servo2.write(pos, 255, false);
+      }
+      
+            
+    }
+    inputString = "";
+
+  }
 }
