@@ -9,10 +9,10 @@ def set_res(cap, x, y):
 
 ser = serial.Serial('COM3', 250000)  # Change if serial not COM3
 
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
 
-frame_w = 640
-frame_h = 480
+frame_w = 1920
+frame_h = 1080
 set_res(cap, frame_w, frame_h)
 
 # Load YOLOv5 model (change the path to your trained model)
