@@ -9,16 +9,15 @@ Created on Mon Mar 11 14:13:34 2024
 
 
    
-import operator as op
+
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-from collections import Counter
-from mpl_toolkits import mplot3d
 from scipy.optimize import fsolve
 
 fig = plt.figure()
 ax = plt.axes(projection='3d')
+
 def mostFrequent(arr, n): 
   
     # Sort the array 
@@ -43,31 +42,6 @@ def mostFrequent(arr, n):
   
     return res 
   
-def IntersecOfSets(arr1, arr2, arr3):
-    # Converting the arrays into sets
-    s1 = set(arr1)
-    s2 = set(arr2)
-    s3 = set(arr3)
-    
-    # Calculates intersection of 
-    # sets on s1 and s2
-    set1 = s1.intersection(s2)         #[80, 20, 100]
-     
-    # Calculates intersection of sets
-    # on set1 and s3
-    result_set = set1.intersection(s3)
-     
-    # Converts resulting set to list
-    final_list = list(result_set)
-    return final_list
-def calc_angles(a,b,c):
-    alpha = np.arccos(  (b**2 + c**2 - a**2) /(2.*b*c) )
-    beta = np.arccos(  (-b**2 + c**2 + a**2) /(2.*a*c) )
-    gamma = np.pi-alpha-beta
-    
-    return alpha, beta, gamma
-
-
 def Circle(x, y, r, n):
     points = []
     theta = (np.pi * 2) / n
@@ -113,17 +87,25 @@ def round_tuples(tup, decimal):
 circle_points = Circle(0, 0, 27.4/2, 5)
 y_coordinates, z_coordinates = zip(*circle_points)
 
-Gx=20
-Gy=20
-Gz=20
+Gx=51
+Gy=25
+Gz=73
 Oxy=[]
 Ox=[]
 Oy=[]
 Oz=[]
-
+xyz=[]
+xyz_1=[]
+xyz_2=[]
+xyz_3=[]
+xyz_4=[]
+xyz_5=[]
+xyz_6=[]
+xyz_7=[]
+xyz_8=[]
+xyz_9=[]
+xyz_10=[]
 x_coordinates=[0,0,0,0,0]
-
-
 mic_1=[[],[]]
 mic_2=[[],[]]
 mic_3=[[],[]]
@@ -163,16 +145,8 @@ x2, y2, z2, r2 = mic_3[0][0][0],mic_3[0][0][1],mic_3[0][0][2],mic_3[1]
 x3, y3, z3, r3 = mic_4[0][0][0],mic_4[0][0][1],mic_4[0][0][2],mic_4[1]
 x4, y4, z4, r4 = mic_5[0][0][0],mic_5[0][0][1],mic_5[0][0][2],mic_5[1]
 x5, y5, z5, r5 = mic_1[0][0][0],mic_1[0][0][1],mic_1[0][0][2],mic_1[1]
-xyz_1=[]
-xyz_2=[]
-xyz_3=[]
-xyz_4=[]
-xyz_5=[]
-xyz_6=[]
-xyz_7=[]
-xyz_8=[]
-xyz_9=[]
-xyz_10=[]
+
+
 for i in range (0,100):  
 
     xyz_1.append(three_sphere_intersection(x1, y1, z1, r1+i, x2, y2, z2, r2+i, x3, y3, z3, r3+i))
@@ -202,10 +176,7 @@ xyz_9=round_tuples(xyz_9,0)
 xyz_10=round_tuples(xyz_10,0)
 
 
-#fin = set1.intersection(set2, set3, set4, set5)
 
-
-xyz=[]
 xyz=xyz_1+xyz_2+xyz_3+xyz_4+xyz_5+xyz_6+xyz_7+xyz_8+xyz_9+xyz_10
 
 fin=mostFrequent(xyz, len(xyz))
