@@ -1,91 +1,205 @@
-import tdoa
-from triangulation import triangulation
 import serial
 import numpy as np
-import evenpoints as ep
+import evenpoints
 import matplotlib.pyplot as plt
+import tdoa
+from utils import *
 
-def data_read(): # reads and processes data from arduino
-    raw_data = arduino.read_until(b'\n')
-    dec_data = raw_data.decode().strip()
-    data = dec_data.split(',')
-    return data
+# ---------------------
+# AD7606 Pins
+# ---------------------
 
-port = 'COM3'
-baudrate = 115200
-arduino = serial.Serial(port, baudrate, timeout=.1)
+# Arduino MEGA 2560 R3
+# ---------------------
+# BUSY 32               // you can use any digital pin   
+# RESET 30              // you can use any digital pin  
+# START_CONVERSION 34   // you can use any digital pin    
+# CHIP_SELECT 53        // SPI CS     
+# D7_out 50             // SPI MISO there is no need to use MOSI port with the ad7606 
+# RD 52                 // SPI SCLK 
+# RANGE 36              // you can use any digital pin 
 
-fs = 550 # sampling frequency [Hz] take from written arduino code (assuming 5 mics)
-sample_len = 2 # sec
-mics = 5 # number of mics
-mic_diameter = 0.2744 # [m]
-buffer_n = int(np.log(fs)/np.log(2))
-buffer_size = 2**(buffer_n)
+# Arduino UNO R4 Wifi
+# ---------------------
+# BUSY 8                // you can use any digital pin   
+# RESET 9               // you can use any digital pin  
+# START_CONVERSION 7    // you can use any digital pin    
+# CHIP_SELECT 10        // SPI CS     
+# D7_out 12             // SPI MISO there is no need to use MOSI port with the ad7606 
+# RD 13                 // SPI SCLK 
+# RANGE 36              // you can use any digital pin
 
-mic1_buffer = [] # buffer for each mic
-mic2_buffer = []
-mic3_buffer = []
-mic4_buffer = []
-mic5_buffer = []
-tau_buffer = np.zeros((mics, 1))
-mic_pos = np.zeros((mics, 3))
+# Servos
+# ---------------------
+# Arduino UNO R4 Wifi
+# Lower servo 5
+# Upper servo 6
 
-coords = ep.circle(0, 0, mic_diameter/2, mics)
+# Note:
+# -------------------------------------------------------------
+# elevation = 180, moves upper servo down
+# azimuth = 180, moves upper servo right (facing array)
+# -------------------------------------------------------------
 
-plt.ion() #enable interactive mode
-fig = plt.figure()
-ax = fig.add_subplot(111) #1x1 plot, subplot 1
-plt.ylim([0, 5])
-plt.xlim([])
+# buffers for data block and advance blocks
+buffers = [[], [], []]
+delays = [[], [], []]
+adv = [[], [], []]
 
-for i in range(np.shape(coords)[0]):
-    for j in range(2):
-        mic_pos[i, j] = coords[i, j]
+# serial communication variables
+port1 = 'COM7'
+port2 = 'COM3'
+baudrate = 500000
 
+
+# data read settings
+byteOrder = 'big'
+bytes2Read = 6 # 16 bit res and 8 channels leading to 16 bytes, 5 channels = 10 byes
+
+
+# initialize serial communication
+arduino_uno = serial.Serial(port1, baudrate)
+# arduino_mega = serial.Serial(port2, baudrate)
+
+
+c = 343 # sound speed
+
+
+# data block parameters
+interp = 10
+scaler = 2.5/(2**16)
+# fs = 6080 # sampling rate simple on uno, analog read only
+fs = 2120 # 3 mics and data sending function: ~467 us conversion time.
+# fs = 760 # arduino mega 2560 sampling rate
+block_n = 40 # number of blocks per second
+block = fs // block_n
+advance = int(block * .5)
+overlap = int(block * .5)
+
+
+# mic array parameters
+mics = 3
+mic_radius = 0.2744
+mic_dist = 0.26097 # largest pair distance
+max_delay = mic_dist / c # 0.000760932944606414 s
+max_ele_delay = 5.601299294e-09
+
+# data block processing params
+Peaks = 3 # empirically decided
+thresh = 6
+azi_range = (30, 150) # lower servo move range
+ele_range = (45, 135) # upper servo move range
+
+
+# initialize mic locations
+locs = evenpoints.circle(0, 0, mic_radius/2, mics)
+mic_loc = np.zeros((3, mics))
+
+for i in range(mics):
+    mic_loc[1, i] = locs[i][0]
+    mic_loc[2, i] = locs[i][1]
+
+counter1 = 0
+lag_amount = 5 # number of lags to average
+
+print("Starting...")
 while True:
-    vals = data_read()
-    # print(vals)
+    vals = dataRead(arduino_uno, STX, ETX, bytes2Read)
     
-    if (len(vals) == mics) and (len(mic1_buffer) < fs): # appends sensor data to buffer if buffer is lesser than sampling frequency
-        mic1_buffer.append(float(vals[0]))
-        mic2_buffer.append(float(vals[1]))
-        mic3_buffer.append(float(vals[2]))
-        mic4_buffer.append(float(vals[3]))
-        mic5_buffer.append(float(vals[4]))
-        
-    # print(mic1_buffer)
-    # print(mic2_buffer)
-    
-    elif (len(vals) == mics) and (len(mic1_buffer) == fs): # applies gcc phat
-        tau1, _ = tdoa.gcc_phat(mic1_buffer, mic2_buffer, fs=fs)
-        tau2, _ = tdoa.gcc_phat(mic2_buffer, mic3_buffer, fs=fs)
-        tau3, _ = tdoa.gcc_phat(mic3_buffer, mic4_buffer, fs=fs)
-        tau4, _ = tdoa.gcc_phat(mic4_buffer, mic5_buffer, fs=fs)
-        tau5, _ = tdoa.gcc_phat(mic5_buffer, mic1_buffer, fs=fs)
-        
-        tau_buffer[0, 0] = tau1
-        tau_buffer[1, 0] = tau2
-        tau_buffer[2, 0] = tau3
-        tau_buffer[3, 0] = tau4
-        tau_buffer[4, 0] = tau5
-        
-        print(f"Tau 1 = {tau1}")
-        print(f"Tau 2 = {tau2}")
-        print(f"Tau 3 = {tau3}")
-        print(f"Tau 4 = {tau4}")
-        print(f"Tau 5 = {tau5}")
-        
-        mic1_buffer.pop(0) # "moves" window one sample forward. (removes 1st sample and adds newest)
-        mic1_buffer.append(float(vals[0]))
-        mic2_buffer.pop(0)
-        mic2_buffer.append(float(vals[1]))
-        mic3_buffer.pop(0)
-        mic3_buffer.append(float(vals[2]))
-        mic4_buffer.pop(0)
-        mic4_buffer.append(float(vals[3]))
-        mic5_buffer.pop(0)
-        mic5_buffer.append(float(vals[4]))
-        
-        print(triangulation(mic_pos, tau_buffer))
-        
-        
+    if (len(buffers[-1]) < block): # checks if buffer is full, and fills it if not
+        for i in range(mics):
+            buffers[i].append(vals[i])
+            
+            
+    if (len(buffers[-1]) == block):
+        if (len(adv[-1]) == advance): # once buffers and advance buffers are full start localization algorithm  
+            _12, cc12 = tdoa.gcc_phat(buffers[0], buffers[1]) # pair-wise correlations using gcc-phat
+            _13, cc13 = tdoa.gcc_phat(buffers[0], buffers[2])
+            _23, cc23 = tdoa.gcc_phat(buffers[1], buffers[2])
+            
+            if _23 == 2: # during testing the sample lags sometimes become 2, so to avoid suddenly moving the camera, set it to 0
+                _23 = 0
+                
+            if _23 != 0: # checks if the delays are 0 or not
+                delays[0].append(_23) # if not zero append to the delays buffer
+                counter1 = 0 # and reset the counter to 0
+            
+            elif _12 != 0:
+                delays[1].append(_12)
+                counter1 = 0
+            
+            elif _13 != 0:
+                delays[2].append(_13)
+                counter1 = 0
+            
+            else: # if delay is zero, increment counter by 1
+                counter1 += 1
+                
+            if (counter1 == lag_amount) and (len(delays[0]) != 0): # if the amount of zeros between non zeroes is equal to a given amount AND the delay buffer is not empty, calculate position to send to servos.
+                counter1 = 0 # reset counter
+                
+                lag_azi = np.sum(delays[0]) / len(delays[0]) # take the average of mic pair 23, corresponds to the lag used to find the azimuth
+                lag_ele = (np.sum(delays[1]) + np.sum(delays[2]))
+                lag_ele = lag_ele / 2 # take the average of mic pairs 13 and 12, corresponds to the lag used to find the elevation
+                
+                delays[0].clear() # clear the delay buffers
+                delays[1].clear()
+                delays[2].clear()
+                
+                if (np.isnan(lag_azi) != True) and (np.isnan(lag_ele) != True):
+                # lag_azi and lag_ele are nans (not a number) when 
+                    
+                    if lag_azi == 2: # during testing the sample lags sometimes become 2, so to avoid suddenly moving the camera, set it to 0
+                        lag_azi -= 2
+                    
+                    print("lag_azi", lag_azi) # for debugging
+                    print("lag_ele", lag_ele)
+                    
+                    lag_azi = lag_azi / fs # divide the sample lags with the sampling frequency to find the time equivalent
+                    lag_ele = lag_ele / fs
+                    
+                    if abs(lag_azi) > max_delay: # additional check to see if the delay is greater than expected, and sets it to max delay if True.
+                        if lag_azi < 0:
+                            lag_azi = - max_delay
+                        else:
+                            lag_azi = max_delay
+                            
+                    if abs(lag_ele) > max_delay:
+                        if lag_ele < 0:
+                            lag_ele = - max_delay
+                        else:
+                            lag_ele = max_delay
+                    
+                    azimuth = 180 - ((np.arccos((lag_azi * c) / mic_dist) / np.pi) * 180) # "180 -" part is to set the default angle to 90, which rotates the servo to point to the front. The np.pi and 180 is to convert radian to degrees
+                    elevation = 180 - ((np.arccos((lag_ele * c) / mic_dist) / np.pi) * 180)
+                    
+                    if azimuth > azi_range[1]: # limit the movement range of the servos on pc side instead of arduino to increase sampling rate a little.
+                        dataSend(arduino_uno, azi_range[1])
+                            
+                    elif azimuth < azi_range[0]:
+                        dataSend(arduino_uno, azi_range[0])
+                      
+                    else:
+                        dataSend(arduino_uno, int(azimuth))
+                        
+                    if elevation > ele_range[1]:
+                        dataSend(arduino_uno, ele_range[1], key='y')
+                            
+                    elif elevation < ele_range[0]:
+                        dataSend(arduino_uno, ele_range[0], key='y')
+                      
+                    else:
+                        dataSend(arduino_uno, elevation, key="y")
+            
+            elif (counter1 == lag_amount): # if the number of zero delays between non zeros is equal to a given amount and the delay buffer is empty, reset the camera to default position
+                dataSend(arduino_uno, 90)
+                dataSend(arduino_uno, 90, key="y")
+            
+            # print("Advancing block...")
+            for i in range(mics): # advances block according to parameters defined
+                buffers[i] = buffers[i][-overlap:] + adv[i]
+                adv[i].clear()   
+            
+        for i in range(mics): # after buffer is full, only the advance buffer is filled
+            adv[i].append(vals[i])
+
