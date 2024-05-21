@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import math
 
-def circle(x, y, r, n):
+def circle(x, y, r, n): # makes evenly space points on a circle
     import numpy as np
     points = []
     theta = (np.pi * 2) / n
