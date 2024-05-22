@@ -15,7 +15,7 @@ frame_w = 1920
 frame_h = 1080
 set_res(cap, frame_w, frame_h)
 
-# Load YOLOv5 model (change the path to your trained model)
+# Load YOLOv5 model
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
 while True:
