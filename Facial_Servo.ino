@@ -1,14 +1,14 @@
 #include <VarSpeedServo.h>
 VarSpeedServo servo1; VarSpeedServo servo2;
-String inputString = "";         // a string to hold incoming data
+String input = "";         
 unsigned int cont=0;
 
 void setup() 
 {
-  servo1.attach(9);
+  servo1.attach(9);        //servo pins
   servo2.attach(10);
 
-  Serial.begin(250000);
+  Serial.begin(500000);    //baudrate of project is 500000
   Serial.println("Ready");
 }
 
@@ -16,61 +16,61 @@ void setup()
 void loop() 
 {
 
-  signed int vel;
-  unsigned int pos;
+  signed int velocity;
+  unsigned int position;
   
   if (Serial.available()) 
   {
-    inputString = Serial.readStringUntil('!');
-    vel = inputString.toInt();   
+    input = Serial.readStringUntil('!');
+    velocity = input.toInt();   
 
-    if(inputString.endsWith("x"))
+    if(input.endsWith("x"))                  //movement in horisontal direction
     {
-      if (vel > 2)
-        servo1.write(180, vel, false);    
-      else if (vel < -2)
-        servo1.write(0, -vel, false);    
+      if (velocity > 2)
+        servo1.write(180, velocity, false);    
+      else if (velocity < -2)
+        servo1.write(0, -velocity, false);    
       else
       {
-        pos = servo1.read();
-        servo1.write(pos, 255, false);       
+        position = servo1.read();
+        servo1.write(position, 255, false);       
       } 
     }
-    else if(inputString.endsWith("y"))
+    else if(input.endsWith("y"))             //Vertical movement
     {
-      if (vel > 2)
-        servo2.write(180, vel, false);    
-      else if (vel < -2)
-        servo2.write(0, -vel, false);    
+      if (velocity > 2)
+        servo2.write(180, velocity, false);    
+      else if (velocity < -2)
+        servo2.write(0, -velocity, false);    
       else
       {
-        pos = servo2.read();
-        servo2.write(pos, 255, false);       
+        position = servo2.read();
+        servo2.write(position, 255, false);       
       } 
     }
-    else if(inputString.endsWith("o"))
+    else if(input.endsWith("o"))            //return to origin
     {
       cont++;
       if (cont >= 100)
       {
-        pos = servo1.read();
+        position = servo1.read();
         servo1.write(90, 20, true);        
-        pos = servo2.read();
+        position = servo2.read();
         servo2.write(70 , 20, true);
         cont = 0;
  
       }
       else
       {
-        pos = servo1.read();
-        servo1.write(pos, 255, false);        
-        pos = servo2.read();
-        servo2.write(pos, 255, false);
+        position = servo1.read();
+        servo1.write(position, 255, false);        
+        position = servo2.read();
+        servo2.write(position, 255, false);
       }
       
             
     }
-    inputString = "";
+    input = "";
 
   }
 }
