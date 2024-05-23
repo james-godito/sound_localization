@@ -11,23 +11,22 @@ This project presents a novel approach to sound source localization using a Time
 
 ## Installation
 
-1. **Download Required Python Modules**: Ensure you have all necessary Python modules. You can install them using pip:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   (Note: Create a `requirements.txt` file listing all needed Python packages if not already provided.)
+1. **Download Required Python Modules**: Ensure you have all necessary Python modules. The required libraries are:
+   * Pyserial
+   * Numpy
+   * evenpoints
+   * matplotlib
+   * tdoa
+   * utils
 
-2. **Upload Arduino Code**: Upload the provided Arduino code to your Arduino IDE compatible board. Connect your microphones, AD7606 DAQ module, and servos to the board as per the hardware requirements.
+3. **Upload Arduino Code**: Upload the provided Arduino code to your Arduino IDE compatible board. Connect your microphones to the AD7606 DAQ module, the connect it and the servos to the board based on the SPI pins on the microcontroller and the user-defined digital pins.
 
-3. **Run the Main Script**: Place the Python modules in the same directory as the main script and run it:
-   ```bash
-   python main.py
-   ```
+4. **Run the Main Script**: Place the Python modules evenpoints.py, tdoa.py, and utils.py in the same directory as the main script and run main:
 
 ## Hardware Requirements
 
 - **Microcontroller Unit (MCU)**: Higher clock speeds yield better performance, but any Arduino can be used if it has enough pins.
-- **Microphone Array**: Multiple microphones connected to the Arduino.
+- **Microphone Array**: Multiple microphones connected to the AD7606.
 - **AD7606 DAQ Module**: Ensure it is configured for the correct communication mode (SPI or Parallel).
 - **Servos**: Two servos for pointing towards the sound source.
 - **Communication**: The Arduino must support SPI or Parallel communication based on the AD7606 configuration. The AD7606 from Amazon is typically set to Parallel mode by default, which can be changed to Serial by moving the R2 resistor to the R1 position.
@@ -41,8 +40,8 @@ This project presents a novel approach to sound source localization using a Time
 ## References
 
 1. [GCC-PHAT Explanation](https://www.proquest.com/docview/304587883?parentSessionId=rFc8F31XVj3N3lu6u2P9rlxSaNrkf9FaCGTloUOT3mk%3D&sourcetype=Dissertations%20&%20Theses)
-2. [AD7606 Datasheet](https://www.analog.com/media/en/technical-documentation/data-sheets/ad7606.pdf)
+2. [AD7606 Datasheet](https://www.analog.com/en/products/ad7606.html)
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0. For more details, see the [LICENSE](LICENSE) file.
+This project is licensed under the GNU General Public License v3.0. For more details, see the [LICENSE](https://www.gnu.org/licenses/gpl-3.0.html) file.
