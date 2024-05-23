@@ -47,11 +47,11 @@ while True:
 
     if people_detections.shape[0] > 0:
         # Assuming the first detected person is the closest one
-        face_center_x = people_detections[0, 0] + people_detections[0, 2] / 2
-        face_center_y = people_detections[0, 1] + people_detections[0, 3] / 2
+        person_center_x = people_detections[0, 0] + people_detections[0, 2] / 2
+        person_center_y = people_detections[0, 1] + people_detections[0, 3] / 2
 
-        err_x = 30 * (face_center_x - frame_w / 2) / (frame_w / 2)
-        err_y = 30 * (face_center_y - frame_h / 2) / (frame_h / 2)
+        err_x = 30 * (person_center_x - frame_w / 2) / (frame_w / 2)
+        err_y = 30 * (person_center_y - frame_h / 2) / (frame_h / 2)
 
         ser.write((f"{err_x}x!").encode())
         ser.write((f"{err_y}y!").encode())
