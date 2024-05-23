@@ -40,9 +40,8 @@ This project presents a novel approach to sound source localization using a Time
 
 ## References
 
-1. [GCC-PHAT Explanation](https://www.researchgate.net/publication/220742477_A_Robust_GCC-PHAT_Cross-Correlation_Function_in_the_Presence_of_Reverberation)
+1. [GCC-PHAT Explanation](https://www.proquest.com/docview/304587883?parentSessionId=rFc8F31XVj3N3lu6u2P9rlxSaNrkf9FaCGTloUOT3mk%3D&sourcetype=Dissertations%20&%20Theses)
 2. [AD7606 Datasheet](https://www.analog.com/media/en/technical-documentation/data-sheets/ad7606.pdf)
-3. [Arduino Documentation](https://www.arduino.cc/en/Guide/HomePage)
 
 ## License
 
