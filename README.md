@@ -42,6 +42,9 @@ This project presents a novel approach to sound source localization using a Time
 1. [GCC-PHAT Explanation](https://www.proquest.com/docview/304587883?parentSessionId=rFc8F31XVj3N3lu6u2P9rlxSaNrkf9FaCGTloUOT3mk%3D&sourcetype=Dissertations%20&%20Theses)
 2. [AD7606 Datasheet](https://www.analog.com/en/products/ad7606.html)
 
+## Notes
+The unused folder in the repository contains an SRP code that has not been properly implemented, but should work theoreticaly with some adjustment.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0. For more details, see the [LICENSE](https://www.gnu.org/licenses/gpl-3.0.html) file.
