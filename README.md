@@ -18,8 +18,10 @@ This project presents a novel approach to sound source localization using a Time
    * matplotlib
    * tdoa
    * utils
+   * Pytorch
+   * cv2
 
-3. **Upload Arduino Code**: Upload the provided Arduino code to your Arduino IDE compatible board. Connect your microphones to the AD7606 DAQ module, the connect it and the servos to the board based on the SPI pins on the microcontroller and the user-defined digital pins.
+3. **Upload Arduino Codes**: Upload the provided Arduino code to your Arduino IDE compatible boards. Connect your microphones to the AD7606 DAQ module, then connect it and the servos to the board based on the SPI pins on the microcontroller and the user-defined digital pins.
 
 4. **Run the Main Script**: Place the Python modules evenpoints.py, tdoa.py, and utils.py in the same directory as the main script and run main:
 
