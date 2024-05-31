@@ -14,14 +14,14 @@ This project presents a novel approach to sound source localization using a Time
 This project uses two different Arduino boards, these are the Mega 2560 and uno R4. The reason for this is because the uno has a better sampling rate, but cannot run or support a library needed for the tracking when it comes to the yolo part.
 The following files are needed to run the entirety of the project as it was intended.
 
-1**main_uno.ini
+1.**main_uno.ini
 
-2**main_mega_servo.ini
+2.**main_mega_servo.ini
 
-3**main_SSL_and_yolo.py
+3.**main_SSL_and_yolo.py
 
-in addition to all the libraries stated below.
-the testing files for each process, the Sound source localization part and Yolo are provided.
+In addition to all the libraries stated below.
+The testing files for each process, the Sound source localization part and Yolo are provided.
 
 ## Installation
 
@@ -34,6 +34,7 @@ the testing files for each process, the Sound source localization part and Yolo 
    * utils
    * Pytorch
    * cv2
+   * *VarSpeedServo(arduino lib)
 
 3. **Upload Arduino Codes**: Upload the provided Arduino code to your Arduino IDE compatible boards. Connect your microphones to the AD7606 DAQ module, then connect it and the servos to the board based on the SPI pins on the microcontroller and the user-defined digital pins.
 
