@@ -14,11 +14,9 @@ This project presents a novel approach to sound source localization using a Time
 This project uses two different Arduino boards, these are the Mega 2560 and uno R4. The reason for this is because the uno has a better sampling rate, but cannot run or support a library needed for the tracking when it comes to the yolo part.
 The following files are needed to run the entirety of the project as it was intended.
 
-1. **main_uno.ini
-
-2. **main_mega_servo.ini
-
-3. **main_SSL_and_yolo.py
+1. **[main_uno.ini](main/arduino/SSL and yolo/main_uno.ini)**
+2. **main_mega_servo.ini**
+3. **main_SSL_and_yolo.py**
 
 In addition to all the libraries stated below.
 The testing files for each process, the Sound source localization part and Yolo are provided.
