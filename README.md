@@ -15,8 +15,7 @@ This project uses two different Arduino boards, these are the Mega 2560 and uno 
 The following files are needed to run the entirety of the project as it was intended.
 
 1. **[arduino codes](https://github.com/james-godito/sound_localization/tree/main/arduino/SSL%20and%20yolo)**
-2. **main_mega_servo.ini**
-3. **main_SSL_and_yolo.py**
+2. **[Python code](https://github.com/james-godito/sound_localization/blob/main/Python/main_SSL_and_yolo.py)**
 
 In addition to all the libraries stated below.
 The testing files for each process, the Sound source localization part and Yolo are provided.
